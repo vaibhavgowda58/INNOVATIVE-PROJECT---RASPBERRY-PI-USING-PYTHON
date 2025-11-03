@@ -1,0 +1,64 @@
+import RPi.GPIO as GPIO
+from time import sleep
+
+GPIO.setwarnings(False)
+GPIO.setmode(GPIO.BCM)
+
+metal_sensor = 19
+ir_sensor = 26
+conveyor1 = 13
+conveyor2 = 6
+pump = 20
+
+# setup PWM process
+servo_pin = 23
+GPIO.setup(servo_pin,GPIO.OUT)
+pwm = GPIO.PWM(servo_pin,50) # 50 Hz (20 ms PWM period)
+pwm.start(3)
+
+GPIO.setup(19 ,GPIO.IN)
+GPIO.setup(ir_sensor ,GPIO.IN)
+GPIO.setup(pump ,GPIO.OUT)
+GPIO.setup(conveyor1,GPIO.OUT)
+GPIO.setup(conveyor2,GPIO.OUT)
+
+def door_open():
+    pwm.ChangeDutyCycle(12)
+
+def door_close():
+        pwm.ChangeDutyCycle(3)
+
+def con_start():
+	GPIO.output(conveyor1, 1)
+	GPIO.output(conveyor2, 0)
+
+def con_stop():
+	GPIO.output(conveyor1, 0)
+	GPIO.output(conveyor2, 0)
+
+while True:
+	ir_val = GPIO.input(ir_sensor)
+	if ir_val == 0:
+		print("Ir Detected")
+		for i in range(0,5):
+			metal_val = GPIO.input(19)
+			print(metal_val,"Checking For metal Please Wait")
+			sleep(0.5)
+		if metal_val == 0:
+			print("metal detected")
+			print("door closed servo closed")
+		else:
+			print("non metal")
+			print("servo open and")
+			door_open()
+			sleep(2)
+			door_close()
+			sleep(1)
+			con_start()
+			sleep(2)
+			con_stop()
+			GPIO.output(pump, 1)
+			sleep(2)
+			GPIO.output(pump,0)
+	print("Waiting!")
+	sleep(1)
